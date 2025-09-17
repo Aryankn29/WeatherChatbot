@@ -1,0 +1,22 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+
+# IDE configuration files
+.idea/
+.vscode/
+
+# Python virtual environment
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Environment variables file
+.env
+
+# Build artifacts
+target/
+
+# Log files
+*.log
