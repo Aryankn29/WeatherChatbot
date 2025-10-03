@@ -1,67 +1,77 @@
+// Wait until page load
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // get html elements
+
+    // get our html elements
     const cityInput = document.getElementById('city-input');
     const getWeatherBtn = document.getElementById('get-weather-btn');
-    const weatherDisplay = document.getElementById('weather-display');
+    const chatDisplay = document.getElementById('weather-display');
 
-    //we use port 5000
+    // The URL of our backend API
     const API_URL = 'http://127.0.0.1:5000/api/weather';
 
-    // fetch weather data
+    // main function
     const fetchWeather = async () => {
-        const city = cityInput.value.trim();
-        if (!city) {
-            weatherDisplay.innerHTML = '<p class="error-message">Please enter a city name.</p>';
-            return;
-        }
+        const message = cityInput.value.trim();
+        if (!message) return;
 
-        // Show a loading message 
-        weatherDisplay.innerHTML = '<p>Loading...</p>';
+        // 1. Ddisplay the user's message in a message bubble'
+        appendMessage(message, 'user-message');
+        cityInput.value = '';
 
         try {
-            const response = await fetch(`${API_URL}?city=${encodeURIComponent(city)}`);
+            // 2. call backend API
+            const response = await fetch(`${API_URL}?message=${encodeURIComponent(message)}`);
 
-            
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || `HTTP error! Status: ${response.status}`);
+                throw new Error(errorData.error);
             }
 
-            // parsing
+            // 3. If successful, display the weather data in its own message bubble
             const weatherData = await response.json();
-            // Call the function to display the weather
-            displayWeather(weatherData);
+            appendWeatherMessage(weatherData);
 
         } catch (error) {
-           
-            weatherDisplay.innerHTML = `<p class="error-message">Error: ${error.message}</p>`;
+            // 4.  error handling
+            appendMessage(error.message, 'bot-message');
             console.error('Fetch error:', error);
         }
     };
 
-    // create html display
-    const displayWeather = (data) => {
-        // Clear previous content
-        weatherDisplay.innerHTML = '';
-        
-        const weatherCard = document.createElement('div');
-        weatherCard.className = 'weather-info';
-        
-        // create data
-        weatherCard.innerHTML = `
-            <h2>${data.city}</h2>
-            <img src="http://openweathermap.org/img/wn/${data.icon}@2x.png" alt="${data.description}">
-            <p>${Math.round(data.temperature)}°C</p>
-            <p>${data.description}</p>
-        `;
-        
-        weatherDisplay.appendChild(weatherCard);
-    };
+    // simple text functon
+    function appendMessage(text, className) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${className}`;
+        messageDiv.textContent = text;
+        chatDisplay.appendChild(messageDiv);
+        scrollToBottom();
+    }
 
-    // event listeners
+    // This function is ONLY for the complex weather card response from the bot
+    function appendWeatherMessage(data) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message bot-message'; // It's a bot message
+
+        // new other function
+        messageDiv.innerHTML = `
+            <div class="weather-info">
+                <h2>${data.city}</h2>
+                <img src="http://openweathermap.org/img/wn/${data.icon}@2x.png" alt="${data.description}">
+                <p>${Math.round(data.temperature)}°C</p>
+                <p>${data.description}</p>
+            </div>
+        `;
+        chatDisplay.appendChild(messageDiv);
+        scrollToBottom();
+    }
+
+    // Helper function to scroll the chat window down
+    function scrollToBottom() {
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+
+    // Event listeners
     getWeatherBtn.addEventListener('click', fetchWeather);
-    // trigger search
     cityInput.addEventListener('keypress', (event) => {
         if (event.key === 'Enter') {
             fetchWeather();
